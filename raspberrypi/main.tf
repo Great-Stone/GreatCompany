@@ -1,27 +1,15 @@
-output "input_need_update_value" {
-  value = lower(var.need_update) == "y" ? true : false
-}
-
 locals {
   timestamp = timestamp()
 }
 
 resource "null_resource" "update_raspberry_pi" {  
-  count = lower(var.need_update) == "y" ? 1 : 0
-  
-  // connection {
-  //   type = "ssh"
-  //   user = "pi"
-  //   private_key = file("./.ssh/id_rsa")
-  //   host = var.server_ip
-  // }
-  for (con in var.connections) {
-    connection {
-      type = con.type
-      user = con.user
-      private_key = file(con.private_key)
-      host = con.host
-    }
+  for_each = var.connections
+
+  connection {    
+    type = each.value.type
+    user = each.value.user
+    private_key = file(each.value.private_key)
+    host = each.value.host
   }
 
   provisioner "remote-exec" {
