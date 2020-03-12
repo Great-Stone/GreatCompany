@@ -10,6 +10,12 @@ variable "zone" {
         "asia-northeast1-a",
     ]
 }
+variable "credentials_file" {
+    default = "terraform-test-gcp.json"
+}
 variable "credentials" {
-    default = file("terraform-test-gcp.json")
+    default = ""
+}
+variable "mode" {
+    default = "dev"
 }
