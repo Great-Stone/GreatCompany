@@ -5,7 +5,6 @@ provider "google" {
 
   project = var.project
   region  = var.region
-  zone    = var.zone_a
 }
 
 resource "google_compute_network" "vpc_network" {
@@ -13,9 +12,12 @@ resource "google_compute_network" "vpc_network" {
 }
 
 resource "google_compute_instance" "vm_instance" {
+  count = length(var.zone)
+
   name         = "terraform-instance"
   machine_type = "f1-micro"
   tags         = ["web", "dev"]
+  zone         = var.zone[count.index]
 
   boot_disk {
     initialize_params {
