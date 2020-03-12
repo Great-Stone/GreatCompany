@@ -2,7 +2,7 @@ locals {
   timestamp = timestamp()
 }
 
-resource "null_resource" "update_raspberry_pi" {  
+resource "null_resource" "provisioning_raspberry_pi" {  
   for_each = var.connections
 
   connection {    
@@ -17,6 +17,13 @@ resource "null_resource" "update_raspberry_pi" {
       "cat /etc/os-release",
       "uname -a",
       "sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get dist-upgrade -y",      
+    ]
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo curl -fsSL https://get.docker.com/ | sudo sh",
+      "sudo usermod -aG docker pi"
     ]
   }
 
