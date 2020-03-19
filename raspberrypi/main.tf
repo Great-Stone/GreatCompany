@@ -12,18 +12,32 @@ resource "null_resource" "provisioning_raspberry_pi" {
     host = each.value.host
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "cat /etc/os-release",
-      "uname -a",
-      "sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get dist-upgrade -y",      
-    ]
+  provisioner "file" {
+    source      = "script/install_utils.sh"
+    destination = "/tmp/install_utils.sh"
+  }
+
+  provisioner "file" {
+    source      = "script/install_consul.sh"
+    destination = "/tmp/install_consul.sh"
+  }
+
+  provisioner "file" {
+    source      = "script/install_nomad.sh"
+    destination = "/tmp/install_nomad.sh"
+  }
+
+  provisioner "file" {
+    source      = "config/nomad_agent.hcl"
+    destination = "/tmp/nomad_agent.hcl"
   }
 
   provisioner "remote-exec" {
     inline = [
-      "sudo curl -fsSL https://get.docker.com/ | sudo sh",
-      "sudo usermod -aG docker pi"
+      "chmod +x /tmp/install_*.sh",
+      "/tmp/install_utils.sh",
+      "/tmp/install_consul.sh",
+      "/tmp/install_nomad.sh"
     ]
   }
 

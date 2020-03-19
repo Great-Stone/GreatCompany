@@ -1,3 +1,4 @@
+// sudo journalctl -u google-startup-scripts.service
 provider "google" {
   version = "3.5.0"
 
@@ -8,30 +9,24 @@ provider "google" {
 }
 
 locals {
-  single_exec = "/usr/local/bin/consul agent -server -ui -advertise=`curl ifconfig.me` -bind=`curl ifconfig.me` -data-dir=/var/lib/consul -node=`hostname -f` -config-dir=/etc/consul.d"  
-  three_exec = "/usr/local/bin/consul agent -node=`hostname -f` -config-dir=/etc/consul.d"
+  join_list = "[${var.consul_server_name[0]}, ${var.consul_server_name[1]}, ${var.consul_server_name[2]}]"
   credentials = var.credentials == "" ? file(var.credentials_file) : var.credentials
 }
 
-// data "template_file" "single_exec" {
-//   template = "/usr/local/bin/consul agent -server -ui -advertise=`curl ifconfig.me` -bind=`curl ifconfig.me` -data-dir=/var/lib/consul -node=`hostname -f` -config-dir=/etc/consul.d"  
-// }
-
-// data "template_file" "three_exec" {
-//   template = "/usr/local/bin/consul agent -node=`hostname -f` -config-dir=/etc/consul.d"
-// }
-
 data "template_file" "startup_script" {
   // Caution!! file line Sequence
-  template = file("${path.module}/templates/install_consul.tpl")
+  template = file("${path.module}/templates/install_servers.tpl")
 
   vars = {
     gcp_project = var.project
     consul_version = "1.7.1",
+    nomad_version = "0.10.4",
+    private_consul_addr = "121.130.137.31",
     datacenter = var.region,
     encrypt = "h65lqS3w4x42KP+n4Hn9RtK84Rx7zP3WSahZSyD5i1o=",
-    join_list = "[${var.consul_server_name[0]}, ${var.consul_server_name[1]}, ${var.consul_server_name[2]}]",
-    excute = length(var.zone) != 3 ? local.single_exec : local.three_exec
+    join_list = local.join_list,
+    consul_excute = "/usr/local/bin/consul agent -config-dir=/etc/consul.d"
+    nomad_excute = "/usr/local/bin/nomad agent -config=/etc/nomad.d"
     credentials = local.credentials
   }
 }
@@ -48,12 +43,15 @@ resource "google_compute_firewall" "default" {
     protocol = "tcp"
     ports    = [
       "80",
-      "8300", # Server RPC
-      "8301", # Serf LAN
-      "8302", # Serf WAN
-      "8400",  # RPC
-      "8500",  # UI
-      "8600"  # DNS Interface
+      "8300", # Consul Server RPC
+      "8301", # Consul Serf LAN
+      "8302", # Consul Serf WAN
+      "8400",  # Consul RPC
+      "8500",  # Consul UI
+      "8600",  # Consul DNS Interface
+      "4646",  # Nomad Http
+      "4647",  # Nomad Rpc
+      "4648"  # Nomad Serf
     ]
   }
 
@@ -61,12 +59,16 @@ resource "google_compute_firewall" "default" {
   source_tags = ["consul-server"]
 }
 
+resource "google_compute_address" "static" {
+  name = "first-address"
+}
+
 resource "google_compute_instance" "consul_servers" {
   count = length(var.zone) != 3 ? 0 : 3
 
   name         = var.consul_server_name[count.index]
   machine_type = "f1-micro"
-  tags         = ["consul-server"]
+  tags         = ["consul-server", "nomad-server"]
   zone         = var.zone[count.index]
   labels       = { "mode" = "server" }
 
@@ -75,19 +77,19 @@ resource "google_compute_instance" "consul_servers" {
       image = "debian-cloud/debian-9"
     }
   }
-
-  // sudo journalctl -u google-startup-scripts.service
+  
   metadata_startup_script = data.template_file.startup_script.rendered
 
   network_interface {
     network = "default"
     access_config {
+      nat_ip = count.index == 0 ? google_compute_address.static.address : ""
     }
   }
 }
 
 output "external_ip" {
-  value = google_compute_instance.consul_servers[*].network_interface.0.access_config.0.nat_ip
+  value = google_compute_instance.consul_servers[0].network_interface.0.access_config.0.nat_ip
 }
 
 output "internal_ip" {
