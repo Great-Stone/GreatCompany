@@ -8,8 +8,7 @@ provider "google" {
   region  = var.region
 }
 
-locals {
-  join_list = "[${var.consul_server_name[0]}, ${var.consul_server_name[1]}, ${var.consul_server_name[2]}]"
+locals {  
   credentials = var.credentials == "" ? file(var.credentials_file) : var.credentials
 }
 
@@ -24,7 +23,6 @@ data "template_file" "startup_script" {
     private_consul_addr = "121.130.137.31",
     datacenter = var.region,
     encrypt = "h65lqS3w4x42KP+n4Hn9RtK84Rx7zP3WSahZSyD5i1o=",
-    join_list = local.join_list,
     consul_excute = "/usr/local/bin/consul agent -config-dir=/etc/consul.d"
     nomad_excute = "/usr/local/bin/nomad agent -config=/etc/nomad.d"
     credentials = local.credentials

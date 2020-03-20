@@ -2,3 +2,4 @@
 *.tfstate
 *.backup
 terraform-test-gcp.json
+plan*

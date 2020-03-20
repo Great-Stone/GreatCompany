@@ -140,7 +140,6 @@ plugin "raw_exec" {
 }
 consul {
   address = "$MY_ADDR:8500"
-  auto_advertse = true
   tags = ["agent", "gcp"]
 }
 EOF

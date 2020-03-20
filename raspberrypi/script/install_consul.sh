@@ -40,7 +40,7 @@ ExecStart=/usr/local/bin/consul agent \
 	-node=my-raspberry-pi \
 	-bind=192.168.0.47 \
 	-client=192.168.0.47 \
-	-recursor 1.1.1.1 \
+	-recursor 192.168.0.24 \
 	-encrypt=h65lqS3w4x42KP+n4Hn9RtK84Rx7zP3WSahZSyD5i1o= \
 	-data-dir=/var/lib/consul \
 	-config-dir=/etc/consul.d \

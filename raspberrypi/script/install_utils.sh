@@ -15,6 +15,7 @@ sudo ufw allow 8300
 sudo ufw allow 8301
 sudo ufw allow 8500
 sudo ufw allow 8600
+
 sudo ufw allow 4646 # nomad
 
 sudo ufw allow 1936 # haproxy

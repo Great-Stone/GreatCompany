@@ -2,6 +2,7 @@
 # nomad status -address=http://192.168.0.24:4646 raspberrypi
 # http://haproxy.service.consul:1936/
 # http://haproxy.service.consul:8080/
+# dig @192.168.0.47 -p 8600 _nginx-webserver._tcp.service.consul
 job "raspberrypi" {
 	datacenters = ["private"]
 	region = "local"

@@ -1,3 +1,6 @@
+# terraform plan -out=./plan1
+# terraform apply plan1
+
 locals {
   address = "192.168.0.24"
   ex-address = "121.130.137.31"
